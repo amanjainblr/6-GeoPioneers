@@ -1,0 +1,35 @@
+# Import necessary libraries
+from qgis.analysis import QgsRasterCalculatorEntry, QgsRasterCalculator
+from pathlib import Path
+
+# Define the raster layers for each RUSLE factor
+raster_factors = {
+    'R': 'E:/Upper_Krishna_Basin_RUSLE_Model/Raster_files/Soil_Loss_Factors/R_Factor.tif',
+    'K': 'E:/Upper_Krishna_Basin_RUSLE_Model/Raster_files/Soil_Loss_Factors/K_Factor.tif',
+    'LS': 'E:/Upper_Krishna_Basin_RUSLE_Model/Raster_files/Soil_Loss_Factors/LS_Factor.tif',
+    'C': 'E:/Upper_Krishna_Basin_RUSLE_Model/Raster_files/Soil_Loss_Factors/C_Factor.tif',
+    'P': 'E:/Upper_Krishna_Basin_RUSLE_Model/Raster_files/Soil_Loss_Factors/P_Factor.tif'
+}
+
+# Define the path to the output raster
+output_raster = 'E:/Upper_Krishna_Basin_RUSLE_Model/Raster_files/sl.tif'
+
+# Create a list of QgsRasterCalculatorEntry objects for each RUSLE factor
+raster_entries = []
+for factor, layer_name in raster_factors.items():
+    layer = QgsProject.instance().mapLayersByName(layer_name)[0]
+    raster_entry = QgsRasterCalculatorEntry()
+    raster_entry.ref = factor
+    raster_entry.raster = layer
+    raster_entry.bandNumber = 1
+    raster_entries.append(raster_entry)
+
+# Define the RUSLE equation as a string
+rusle_expression = "R * K * LS * C * P"
+
+# Get the dimensions of the first input layer
+output_layer = QgsProject.instance().mapLayersByName(list(raster_factors.values())[0])[0]
+
+# Create a QgsRasterCalculator object to calculate the soil loss raster
+calc = QgsRasterCalculator(rusle_expression, output_raster, 'GTiff', output_layer.extent(), output_layer.width(), output_layer.height(), raster_entries)
+calc.processCalculation()
